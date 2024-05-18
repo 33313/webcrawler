@@ -13,7 +13,7 @@ function getURLsFromHTML(htmlBody, baseURL) {
     for (let a of anchors) {
         let str = a.href
         if (str.startsWith('/')) {
-            str = `${baseURL}${a.href}`
+            str = `${baseURL}${a.href.substring(1)}`
         }
         if (str.endsWith('/')) {
             str = str.substring(0, str.length - 1)
@@ -23,10 +23,10 @@ function getURLsFromHTML(htmlBody, baseURL) {
     return links
 }
 
-async function getBodyFromURL(currentURL) {
+async function getBodyFromURL(url) {
     let res
     try {
-        res = await fetch(currentURL)
+        res = await fetch(url)
     } catch (e) {
         throw new Error(`Network error: ${e.message}`)
     }
@@ -43,4 +43,35 @@ async function getBodyFromURL(currentURL) {
     return await res.text()
 }
 
-export { normalizeURL, getURLsFromHTML, getBodyFromURL }
+async function crawlPage(baseURL, currentURL = baseURL, pages = {}) {
+    const bURL = new URL(baseURL)
+    const cURL = new URL(currentURL)
+    if (bURL.hostname !== cURL.hostname) return pages
+
+    const nCurrentURL = normalizeURL(currentURL)
+    if (nCurrentURL in pages) {
+        ++pages[nCurrentURL]
+        return pages
+    }
+    
+    pages[nCurrentURL] = 1
+
+    console.log(`Crawling @ ${currentURL}...`)
+    let nextURLs
+    try {
+        let res = await getBodyFromURL(currentURL)
+        nextURLs = getURLsFromHTML(res, baseURL)
+    } catch (e) {
+        console.error(`ERROR: ${e.message}`)
+        return pages
+    }
+
+    for (const nextURL of nextURLs) {
+        pages = await crawlPage(baseURL, nextURL, pages)
+    }
+
+    return pages
+}
+
+
+export { normalizeURL, getURLsFromHTML, getBodyFromURL, crawlPage }
