@@ -23,4 +23,24 @@ function getURLsFromHTML(htmlBody, baseURL) {
     return links
 }
 
-export { normalizeURL, getURLsFromHTML }
+async function getBodyFromURL(currentURL) {
+    let res
+    try {
+        res = await fetch(currentURL)
+    } catch (e) {
+        throw new Error(`Network error: ${e.message}`)
+    }
+
+    if (res.status > 299) {
+        console.error(`ERROR: HTTP Request failed. Status code: ${res.status}`)
+        return
+    }
+    const ct = res.headers.get("Content-Type")
+    if (!ct || !ct.includes("text/html")) {
+        console.error(`ERROR: Expected content type "text/html". Actual: ${ct}`)
+        return
+    }
+    return await res.text()
+}
+
+export { normalizeURL, getURLsFromHTML, getBodyFromURL }
