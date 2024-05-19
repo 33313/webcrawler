@@ -12,14 +12,26 @@ function getURLsFromHTML(htmlBody, baseURL) {
     let links = []
 
     for (let a of anchors) {
-        let str = a.href
-        if (str.startsWith('/')) {
-            if (String(baseURL).endsWith('/')) {
-                str = `${String(baseURL).substring(0, String(baseURL).length - 1)}${a.href}`
-            } else {
-                str = `${baseURL}${a.href}`
-            }
+        let baseURLstr = baseURL
+        if (String(baseURL).endsWith('/')) {
+            baseURLstr = String(baseURL).substring(0, String(baseURL).length - 1)
         }
+
+        let str = a.href
+        switch (str[0]) {
+            case '/':
+                str = `${baseURLstr}${a.href}`
+                break
+            case '.':
+                let sub = 1
+                if (str[1] == '.') sub = 2
+                str = `${baseURLstr}${a.href.substring(sub)}`
+                break
+            default:
+                if (str.startsWith("http")) break
+                str = `${baseURLstr}/${a.href}`
+        }
+
         if (str.endsWith('/')) {
             str = str.substring(0, str.length - 1)
         }
