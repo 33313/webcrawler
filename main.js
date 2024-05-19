@@ -1,5 +1,6 @@
 import { argv } from "node:process"
 import { crawlPage } from "./crawl.js"
+import { printReport } from "./report.js"
 
 function main() {
     if (argv.length != 3) {
@@ -7,7 +8,7 @@ function main() {
         return
     }
     console.log(`LOG: Crawling @ "${argv[2]}"...`)
-    crawlPage(new URL(argv[2])).then(res => console.log(res))
+    crawlPage(new URL(argv[2])).then(pages => printReport(pages))
 }
 
 main()
