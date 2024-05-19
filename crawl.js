@@ -10,16 +10,22 @@ function getURLsFromHTML(htmlBody, baseURL) {
     const body = new JSDOM(htmlBody)
     let anchors = body.window.document.querySelectorAll('a')
     let links = []
+
     for (let a of anchors) {
         let str = a.href
         if (str.startsWith('/')) {
-            str = `${baseURL}${a.href.substring(1)}`
+            if (String(baseURL).endsWith('/')) {
+                str = `${String(baseURL).substring(0, String(baseURL).length - 1)}${a.href}`
+            } else {
+                str = `${baseURL}${a.href}`
+            }
         }
         if (str.endsWith('/')) {
             str = str.substring(0, str.length - 1)
         }
         links.push(str)
     }
+
     return links
 }
 
@@ -53,10 +59,10 @@ async function crawlPage(baseURL, currentURL = baseURL, pages = {}) {
         ++pages[nCurrentURL]
         return pages
     }
-    
+
     pages[nCurrentURL] = 1
 
-    console.log(`Crawling @ ${currentURL}...`)
+    console.log(`Crawling @ "${currentURL}"...`)
     let nextURLs
     try {
         let res = await getBodyFromURL(currentURL)
@@ -72,6 +78,5 @@ async function crawlPage(baseURL, currentURL = baseURL, pages = {}) {
 
     return pages
 }
-
 
 export { normalizeURL, getURLsFromHTML, getBodyFromURL, crawlPage }
